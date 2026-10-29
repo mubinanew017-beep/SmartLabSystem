@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookings | Smart Lab</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #eef3ff;
+            color: #183153;
+        }
+
+        header {
+            background: #1d4da1;
+            color: white;
+            padding: 25px;
+        }
+
+        header h1 { margin-top: 0; }
+
+        nav {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+        }
+
+        nav a:hover { text-decoration: underline; }
+
+        main { padding: 30px; }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px #00000010;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            min-width: 700px;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 13px;
+            text-align: left;
+            border-bottom: 1px solid #dce5f5;
+        }
+
+        th {
+            background: #dfe9ff;
+            color: #1d4da1;
+        }
+
+        .status { font-weight: bold; }
+        .pending { color: #9a6500; }
+        .approved { color: #16803c; }
+        .rejected { color: #c62828; }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 9px 12px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover { opacity: 0.85; }
+        .approve { background: #16803c; }
+        .reject { background: #c62828; }
+
+        .empty {
+            padding: 20px;
+            background: #f4f7ff;
+            border-radius: 8px;
+        }
+
+        .flash-message {
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 7px;
+        }
+
+        .flash-message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .flash-message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .flash-message:not(.success):not(.error) {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        @media (max-width: 600px) {
+            main { padding: 15px; }
+            header { padding: 20px; }
+            .card { padding: 15px; }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Smart Lab System</h1>
+
+        <nav>
+            {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('equipment') }}">Equipment</a>
+                <a href="{{ url_for('add_equipment') }}">Add Equipment</a>
+                <a href="{{ url_for('view_bookings') }}">Manage Bookings</a>
+                <a href="{{ url_for('maintenance_requests') }}">Maintenance Reports</a>
+            {% else %}
+                <a href="{{ url_for('student_dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('equipment') }}">Equipment</a>
+                <a href="{{ url_for('booking') }}">New Booking</a>
+                <a href="{{ url_for('my_bookings') }}">My Bookings</a>
+                <a href="{{ url_for('maintenance') }}">Report Issue</a>
+                <a href="{{ url_for('my_maintenance') }}">My Maintenance Reports</a>
+            {% endif %}
+
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="card">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endwith %}
+
+            <h2>
+                {% if my_bookings %}
+                    My Bookings
+                {% else %}
+                    Manage Booking Requests
+                {% endif %}
+            </h2>
+
+            <p>
+                {% if my_bookings %}
+                    View the status of your equipment booking requests.
+                {% else %}
+                    Review student requests and approve or reject bookings.
+                {% endif %}
+            </p>
+
+            {% if bookings %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Student Name</th>
+                            <th>Roll Number</th>
+                            <th>Equipment</th>
+                            <th>Date</th>
+                            <th>Time Slot</th>
+                            <th>Status</th>
+
+                            {% if not my_bookings %}
+                                <th>Action</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for booking in bookings %}
+                            <tr>
+                                <td>{{ booking.id }}</td>
+                                <td>{{ booking.student_name }}</td>
+                                <td>{{ booking.roll_number or 'N/A' }}</td>
+                                <td>{{ booking.equipment_name }}</td>
+                                <td>{{ booking.booking_date }}</td>
+                                <td>{{ booking.time_slot }}</td>
+
+                                <td class="status {% if booking.status == 'Approved' %}approved{% elif booking.status == 'Rejected' %}rejected{% else %}pending{% endif %}">
+                                    {{ booking.status or 'Pending' }}
+                                </td>
+
+                                {% if not my_bookings %}
+                                    <td>
+                                        <div class="actions">
+                                            {% if booking.status != 'Approved' %}
+                                                <form method="POST"
+                                                      action="{{ url_for('update_booking', booking_id=booking.id) }}"
+                                                      onsubmit="return confirm('Approve this booking?');">
+                                                    <input type="hidden" name="action" value="Approved">
+                                                    <button type="submit" class="approve">Approve</button>
+                                                </form>
+                                            {% endif %}
+
+                                            {% if booking.status != 'Rejected' %}
+                                                <form method="POST"
+                                                      action="{{ url_for('update_booking', booking_id=booking.id) }}"
+                                                      onsubmit="return confirm('Reject this booking?');">
+                                                    <input type="hidden" name="action" value="Rejected">
+                                                    <button type="submit" class="reject">Reject</button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="empty">
+                    {% if my_bookings %}
+                        You have not submitted any booking requests yet.
+                    {% else %}
+                        No booking requests have been submitted yet.
+                    {% endif %}
+                </p>
+            {% endif %}
+        </div>
+    </main>
+</body>
+</html>

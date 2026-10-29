@@ -1,0 +1,179 @@
+\<!DOCTYPE html>
+
+\<html lang="en">
+\<head>
+&#x20;   \<meta charset="UTF-8">
+&#x20;   \<meta name="viewport" content="width=device-width, initial-scale=1.0">
+&#x20;   \<title>Smart Lab Login\</title>
+
+```
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #eef3ff;
+        color: #1e293b;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .login-card {
+        background: white;
+        width: 100%;
+        max-width: 420px;
+        padding: 32px;
+        border-radius: 14px;
+        box-shadow: 0 5px 25px #00000015;
+    }
+
+    h1 {
+        text-align: center;
+        color: #1746a2;
+        margin: 0 0 8px;
+    }
+
+    .subtitle {
+        text-align: center;
+        color: #64748b;
+        line-height: 1.5;
+        margin-bottom: 24px;
+    }
+
+    label {
+        display: block;
+        margin-top: 18px;
+        font-weight: bold;
+    }
+
+    input,
+    select {
+        width: 100%;
+        padding: 12px;
+        margin-top: 8px;
+        border: 1px solid #cbd5e1;
+        border-radius: 7px;
+        font-size: 15px;
+    }
+
+    input:focus,
+    select:focus {
+        outline: 2px solid #93b4ff;
+        border-color: #1746a2;
+    }
+
+    button {
+        width: 100%;
+        margin-top: 24px;
+        padding: 13px;
+        background: #1746a2;
+        color: white;
+        border: none;
+        border-radius: 7px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #12377e;
+    }
+
+    .message {
+        padding: 12px;
+        border-radius: 7px;
+        margin-top: 12px;
+        line-height: 1.5;
+    }
+
+    .error {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+
+    .success {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #86efac;
+    }
+
+    .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        color: #1746a2;
+        text-decoration: none;
+    }
+
+    .back-link:hover {
+        text-decoration: underline;
+    }
+</style>
+```
+
+\</head>
+
+\<body>
+&#x20;   \<main class="login-card">
+&#x20;       \<h1>Smart Lab\</h1>
+
+```
+    <p class="subtitle">
+        Equipment Booking &amp; Maintenance System
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="message {{ category }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('login') }}">
+
+        <label for="role">Login As</label>
+        <select id="role" name="role" required>
+            <option value="">Select your role</option>
+            <option value="student">Student</option>
+            <option value="admin">Lab Administrator</option>
+        </select>
+
+        <label for="username">Username</label>
+        <input
+            type="text"
+            id="username"
+            name="username"
+            placeholder="Enter username"
+            autocomplete="username"
+            required
+        >
+
+        <label for="password">Password</label>
+        <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Enter password"
+            autocomplete="current-password"
+            required
+        >
+
+        <button type="submit">Login</button>
+    </form>
+
+    <a href="{{ url_for('home') }}" class="back-link">
+        Back to Home
+    </a>
+</main>
+```
+
+\</body>
+\</html>

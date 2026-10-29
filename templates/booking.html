@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Equipment | Smart Lab</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #eef3ff;
+            color: #183153;
+        }
+
+        header {
+            background: #1d4da1;
+            color: white;
+            padding: 22px 35px;
+        }
+
+        header h1 { margin: 0 0 18px; }
+
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        nav a:hover { text-decoration: underline; }
+
+        main {
+            max-width: 750px;
+            margin: 35px auto;
+            padding: 0 18px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px #00000010;
+        }
+
+        .card h2 {
+            color: #1d4da1;
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            margin-top: 18px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            font-size: 16px;
+            font-family: Arial, sans-serif;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: 2px solid #93c5fd;
+            border-color: #1d4da1;
+        }
+
+        textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 17px;
+            border: none;
+            border-radius: 7px;
+            background: #1d4da1;
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn:hover { background: #163c80; }
+
+        .btn-secondary { background: #16803c; }
+        .btn-secondary:hover { background: #11652e; }
+
+        .message {
+            padding: 14px;
+            margin: 18px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .message.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .message:not(.success):not(.error) {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+        }
+
+        @media (max-width: 600px) {
+            header { padding: 20px; }
+            nav { gap: 14px; }
+            main { margin: 20px auto; }
+            .card { padding: 22px; }
+            .actions { flex-direction: column; }
+            .btn { width: 100%; }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Smart Lab System</h1>
+
+        <nav>
+            {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('equipment') }}">Equipment</a>
+                <a href="{{ url_for('add_equipment') }}">Add Equipment</a>
+                <a href="{{ url_for('view_bookings') }}">Manage Bookings</a>
+                <a href="{{ url_for('maintenance_requests') }}">Maintenance Reports</a>
+            {% else %}
+                <a href="{{ url_for('student_dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('equipment') }}">Equipment</a>
+                <a href="{{ url_for('my_bookings') }}">My Bookings</a>
+                <a href="{{ url_for('maintenance') }}">Report Issue</a>
+                <a href="{{ url_for('my_maintenance') }}">My Maintenance Reports</a>
+            {% endif %}
+
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="card">
+            <h2>Book Laboratory Equipment</h2>
+
+            <p>Enter your details to request laboratory equipment.</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="message {{ category }}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('booking') }}">
+                <label for="student_name">Student Name</label>
+                <input
+                    type="text"
+                    id="student_name"
+                    name="student_name"
+                    placeholder="Enter your name"
+                    required
+                >
+
+                <label for="roll_number">Roll Number</label>
+                <input
+                    type="text"
+                    id="roll_number"
+                    name="roll_number"
+                    placeholder="Enter your roll number"
+                    required
+                >
+
+                <label for="equipment_name">Select Equipment</label>
+                <select id="equipment_name" name="equipment_name" required>
+                    <option value="">Choose equipment</option>
+
+                    {% for item in equipment %}
+                        <option value="{{ item.name }}">
+                            {{ item.name }} (Available: {{ item.available }})
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <label for="booking_date">Booking Date</label>
+                <input
+                    type="date"
+                    id="booking_date"
+                    name="booking_date"
+                    required
+                >
+
+                <label for="time_slot">Time Slot</label>
+                <select id="time_slot" name="time_slot" required>
+                    <option value="">Choose a time slot</option>
+                    <option value="09:00 AM - 10:00 AM">09:00 AM - 10:00 AM</option>
+                    <option value="10:00 AM - 11:00 AM">10:00 AM - 11:00 AM</option>
+                    <option value="11:00 AM - 12:00 PM">11:00 AM - 12:00 PM</option>
+                    <option value="01:00 PM - 02:00 PM">01:00 PM - 02:00 PM</option>
+                    <option value="02:00 PM - 03:00 PM">02:00 PM - 03:00 PM</option>
+                </select>
+
+                <label for="purpose">Purpose (Optional)</label>
+                <textarea
+                    id="purpose"
+                    name="purpose"
+                    placeholder="Enter the purpose of booking"
+                ></textarea>
+
+                <div class="actions">
+                    <button type="submit" class="btn">Submit Booking</button>
+
+                    {% if session.get('role') == 'admin' %}
+                        <a href="{{ url_for('view_bookings') }}" class="btn btn-secondary">
+                            View All Bookings
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('my_bookings') }}" class="btn btn-secondary">
+                            View My Bookings
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        Smart Lab Equipment Booking &amp; Maintenance System
+    </footer>
+
+    <script>
+        const bookingDate = document.getElementById("booking_date");
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, "0");
+        const day = String(today.getDate()).padStart(2, "0");
+
+        bookingDate.min = `${year}-${month}-${day}`;
+    </script>
+</body>
+</html>
